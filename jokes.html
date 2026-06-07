@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mochiman Joke Generator</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Poppins',sans-serif;
+}
+
+body{
+background:#0b0b0b;
+color:white;
+min-height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+padding:20px;
+}
+
+body::before{
+content:'';
+position:fixed;
+width:100%;
+height:100%;
+background:
+radial-gradient(circle at 20% 20%,#00ff88 0%,transparent 30%),
+radial-gradient(circle at 80% 30%,#4f8cff 0%,transparent 30%);
+opacity:.15;
+z-index:-1;
+}
+
+.container{
+width:100%;
+max-width:700px;
+background:rgba(255,255,255,.05);
+backdrop-filter:blur(15px);
+border:1px solid rgba(255,255,255,.1);
+border-radius:25px;
+padding:50px;
+box-shadow:0 0 50px rgba(0,255,136,.1);
+}
+
+.header{
+text-align:center;
+margin-bottom:40px;
+}
+
+.header h1{
+font-size:48px;
+margin-bottom:10px;
+color:#00ff88;
+}
+
+.header p{
+color:#ccc;
+font-size:16px;
+}
+
+.joke-box{
+background:rgba(255,255,255,.08);
+border:2px solid rgba(0,255,136,.3);
+border-radius:15px;
+padding:30px;
+margin-bottom:30px;
+min-height:150px;
+display:flex;
+align-items:center;
+justify-content:center;
+transition:.3s;
+}
+
+.joke-box.loading{
+border-color:#4f8cff;
+}
+
+.joke-content{
+text-align:center;
+}
+
+.joke-setup{
+font-size:18px;
+color:#ccc;
+margin-bottom:15px;
+font-weight:500;
+}
+
+.joke-punchline{
+font-size:24px;
+color:#00ff88;
+font-weight:700;
+line-height:1.6;
+margin-top:15px;
+}
+
+.joke-single{
+font-size:22px;
+color:#fff;
+line-height:1.8;
+}
+
+.loader{
+display:inline-block;
+width:40px;
+height:40px;
+border:4px solid rgba(0,255,136,.2);
+border-top:4px solid #00ff88;
+border-radius:50%;
+animation:spin 1s linear infinite;
+}
+
+@keyframes spin{
+0%{transform:rotate(0deg);}
+100%{transform:rotate(360deg);}
+}
+
+.buttons{
+display:flex;
+gap:15px;
+justify-content:center;
+flex-wrap:wrap;
+}
+
+.btn{
+padding:15px 30px;
+background:#00ff88;
+color:black;
+border:none;
+border-radius:12px;
+font-weight:700;
+cursor:pointer;
+transition:.3s;
+font-size:16px;
+}
+
+.btn:hover{
+transform:translateY(-3px);
+box-shadow:0 0 20px rgba(0,255,136,.5);
+}
+
+.btn:active{
+transform:translateY(0);
+}
+
+.btn-secondary{
+background:transparent;
+color:#4f8cff;
+border:2px solid #4f8cff;
+}
+
+.btn-secondary:hover{
+background:rgba(79,140,255,.1);
+box-shadow:0 0 20px rgba(79,140,255,.5);
+}
+
+.joke-counter{
+text-align:center;
+color:#888;
+font-size:14px;
+margin-top:20px;
+}
+
+.error-message{
+color:#ff6464;
+text-align:center;
+padding:15px;
+background:rgba(255,100,100,.1);
+border-radius:10px;
+display:none;
+}
+
+@media (max-width:600px){
+.container{
+padding:30px;
+}
+
+.header h1{
+font-size:36px;
+}
+
+.joke-setup{
+font-size:16px;
+}
+
+.joke-punchline{
+font-size:20px;
+}
+
+.joke-single{
+font-size:18px;
+}
+
+.buttons{
+flex-direction:column;
+}
+
+.btn{
+width:100%;
+}
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="header">
+<h1>😂 Mochiman Jokes</h1>
+<p>Get a random laugh with mochi vibes</p>
+</div>
+
+<div class="joke-box" id="jokeBox">
+<div class="loader"></div>
+</div>
+
+<div class="error-message" id="errorMessage"></div>
+
+<div class="buttons">
+<button class="btn" onclick="getJoke()">🎲 Get New Joke</button>
+<button class="btn btn-secondary" onclick="shareJoke()">📤 Share</button>
+</div>
+
+<div class="joke-counter">
+<span id="jokeCount">0</span> jokes told
+</div>
+
+</div>
+
+<script>
+
+let currentJoke = null;
+let jokeCount = 0;
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+  getJoke();
+});
+
+// Fetch joke from API
+async function getJoke() {
+  const jokeBox = document.getElementById('jokeBox');
+  const errorMessage = document.getElementById('errorMessage');
+  
+  // Show loading state
+  jokeBox.innerHTML = '<div class="loader"></div>';
+  jokeBox.classList.add('loading');
+  errorMessage.style.display = 'none';
+  
+  try {
+    // Using JokeAPI (free, no authentication needed)
+    const response = await fetch('https://v2.jokeapi.dev/joke/Any?type=single');
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch joke');
+    }
+    
+    const data = await response.json();
+    
+    // Handle different joke types
+    if (data.type === 'single') {
+      currentJoke = {
+        text: data.joke,
+        type: 'single'
+      };
+    } else if (data.type === 'twopart') {
+      currentJoke = {
+        setup: data.setup,
+        punchline: data.delivery,
+        type: 'twopart'
+      };
+    }
+    
+    displayJoke();
+    jokeCount++;
+    updateJokeCount();
+    jokeBox.classList.remove('loading');
+    
+  } catch (error) {
+    console.error('Error:', error);
+    jokeBox.classList.remove('loading');
+    errorMessage.textContent = '🍡 Oops! Could not load a joke. Please try again!';
+    errorMessage.style.display = 'block';
+    jokeBox.innerHTML = '<div class="joke-content"><p style="color:#aaa;">Unable to load joke at this moment</p></div>';
+  }
+}
+
+// Display joke
+function displayJoke() {
+  const jokeBox = document.getElementById('jokeBox');
+  
+  if (!currentJoke) return;
+  
+  let jokeHTML = '<div class="joke-content">';
+  
+  if (currentJoke.type === 'single') {
+    jokeHTML += `<p class="joke-single">${escapeHtml(currentJoke.text)}</p>`;
+  } else {
+    jokeHTML += `<p class="joke-setup">${escapeHtml(currentJoke.setup)}</p>`;
+    jokeHTML += `<p class="joke-punchline">${escapeHtml(currentJoke.punchline)}</p>`;
+  }
+  
+  jokeHTML += '</div>';
+  jokeBox.innerHTML = jokeHTML;
+}
+
+// Share joke
+function shareJoke() {
+  if (!currentJoke) {
+    alert('No joke to share yet!');
+    return;
+  }
+  
+  let jokeText = '';
+  if (currentJoke.type === 'single') {
+    jokeText = currentJoke.text;
+  } else {
+    jokeText = `${currentJoke.setup}\n\n${currentJoke.punchline}`;
+  }
+  
+  const shareText = `😂 ${jokeText}\n\n🍡 From Mochiman Joke Generator`;
+  
+  // Try to use native share if available
+  if (navigator.share) {
+    navigator.share({
+      title: 'Mochiman Joke Generator',
+      text: shareText
+    }).catch(err => console.log('Error sharing:', err));
+  } else {
+    // Fallback: Copy to clipboard
+    navigator.clipboard.writeText(shareText).then(() => {
+      alert('✅ Joke copied to clipboard!');
+    }).catch(err => {
+      console.error('Failed to copy:', err);
+      alert('Failed to copy joke');
+    });
+  }
+}
+
+// Update joke counter
+function updateJokeCount() {
+  document.getElementById('jokeCount').textContent = jokeCount;
+}
+
+// Escape HTML to prevent XSS
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+</script>
+
+</body>
+</html>
