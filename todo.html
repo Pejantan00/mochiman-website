@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mochiman To-Do List</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  background: #0b0b0b;
+  color: white;
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background:
+    radial-gradient(circle at 20% 20%, #00ff88 0%, transparent 30%),
+    radial-gradient(circle at 80% 30%, #4f8cff 0%, transparent 30%);
+  opacity: .15;
+  z-index: -1;
+}
+
+.container {
+  width: 100%;
+  max-width: 600px;
+  background: rgba(255, 255, 255, .05);
+  backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 25px;
+  padding: 40px;
+  box-shadow: 0 0 50px rgba(0, 255, 136, .1);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.header h1 {
+  font-size: 42px;
+  margin-bottom: 10px;
+  color: #00ff88;
+}
+
+.header p {
+  color: #ccc;
+  font-size: 14px;
+}
+
+.input-section {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+#todoInput {
+  flex: 1;
+  padding: 15px 20px;
+  background: rgba(255, 255, 255, .08);
+  border: 2px solid rgba(255, 255, 255, .1);
+  border-radius: 12px;
+  color: white;
+  font-size: 16px;
+  transition: .3s;
+}
+
+#todoInput:focus {
+  outline: none;
+  border-color: #00ff88;
+  box-shadow: 0 0 15px rgba(0, 255, 136, .3);
+}
+
+#todoInput::placeholder {
+  color: #666;
+}
+
+.btn-add {
+  padding: 15px 30px;
+  background: #00ff88;
+  color: black;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: .3s;
+  font-size: 16px;
+}
+
+.btn-add:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 20px rgba(0, 255, 136, .5);
+}
+
+.btn-add:active {
+  transform: translateY(0);
+}
+
+.stats {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 30px;
+  padding: 15px;
+  background: rgba(79, 140, 255, .1);
+  border-radius: 12px;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-number {
+  font-size: 28px;
+  font-weight: 800;
+  color: #4f8cff;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #999;
+  margin-top: 5px;
+}
+
+.todos-list {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.todos-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.todos-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, .05);
+  border-radius: 10px;
+}
+
+.todos-list::-webkit-scrollbar-thumb {
+  background: #00ff88;
+  border-radius: 10px;
+}
+
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px;
+  background: rgba(255, 255, 255, .03);
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  transition: .3s;
+}
+
+.todo-item:hover {
+  background: rgba(255, 255, 255, .08);
+  border-color: rgba(0, 255, 136, .3);
+}
+
+.todo-item.completed {
+  opacity: .6;
+}
+
+.todo-item.completed .todo-text {
+  text-decoration: line-through;
+  color: #888;
+}
+
+.checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #00ff88;
+}
+
+.todo-text {
+  flex: 1;
+  word-break: break-word;
+  color: #fff;
+}
+
+.btn-delete {
+  padding: 8px 12px;
+  background: rgba(255, 100, 100, .2);
+  color: #ff6464;
+  border: 1px solid #ff6464;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  transition: .3s;
+}
+
+.btn-delete:hover {
+  background: rgba(255, 100, 100, .4);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+.empty-state p {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.empty-state span {
+  font-size: 48px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-secondary {
+  flex: 1;
+  padding: 12px;
+  background: rgba(79, 140, 255, .2);
+  color: #4f8cff;
+  border: 1px solid #4f8cff;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: .3s;
+}
+
+.btn-secondary:hover {
+  background: rgba(79, 140, 255, .4);
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 25px;
+  }
+
+  .header h1 {
+    font-size: 32px;
+  }
+
+  .input-section {
+    flex-direction: column;
+  }
+
+  .btn-add {
+    width: 100%;
+  }
+
+  .stats {
+    gap: 10px;
+  }
+
+  .stat-number {
+    font-size: 24px;
+  }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <div class="header">
+    <h1>🍡 Mochiman To-Do</h1>
+    <p>Keep track of your mochi tasks</p>
+  </div>
+
+  <div class="input-section">
+    <input 
+      type="text" 
+      id="todoInput" 
+      placeholder="Add a new task..."
+      autocomplete="off"
+    >
+    <button class="btn-add" onclick="addTodo()">Add</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat-item">
+      <div class="stat-number" id="totalCount">0</div>
+      <div class="stat-label">Total</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="completedCount">0</div>
+      <div class="stat-label">Completed</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" id="pendingCount">0</div>
+      <div class="stat-label">Pending</div>
+    </div>
+  </div>
+
+  <div class="todos-list" id="todosList"></div>
+
+  <div class="actions">
+    <button class="btn-secondary" onclick="clearCompleted()">Clear Completed</button>
+    <button class="btn-secondary" onclick="clearAll()">Clear All</button>
+  </div>
+
+</div>
+
+<script>
+
+const STORAGE_KEY = 'mochiman_todos';
+
+// Initialize app
+document.addEventListener('DOMContentLoaded', () => {
+  loadTodos();
+  document.getElementById('todoInput').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') addTodo();
+  });
+});
+
+// Add new todo
+function addTodo() {
+  const input = document.getElementById('todoInput');
+  const text = input.value.trim();
+
+  if (text === '') {
+    alert('Please enter a task!');
+    return;
+  }
+
+  const todos = getTodos();
+  const newTodo = {
+    id: Date.now(),
+    text: text,
+    completed: false,
+    createdAt: new Date().toISOString()
+  };
+
+  todos.push(newTodo);
+  saveTodos(todos);
+  input.value = '';
+  input.focus();
+  renderTodos();
+}
+
+// Toggle todo completion
+function toggleTodo(id) {
+  const todos = getTodos();
+  const todo = todos.find(t => t.id === id);
+  if (todo) {
+    todo.completed = !todo.completed;
+    saveTodos(todos);
+    renderTodos();
+  }
+}
+
+// Delete specific todo
+function deleteTodo(id) {
+  const todos = getTodos().filter(t => t.id !== id);
+  saveTodos(todos);
+  renderTodos();
+}
+
+// Clear all completed todos
+function clearCompleted() {
+  if (confirm('Delete all completed tasks?')) {
+    const todos = getTodos().filter(t => !t.completed);
+    saveTodos(todos);
+    renderTodos();
+  }
+}
+
+// Clear all todos
+function clearAll() {
+  if (confirm('Delete ALL tasks? This cannot be undone!')) {
+    saveTodos([]);
+    renderTodos();
+  }
+}
+
+// Render todos to DOM
+function renderTodos() {
+  const todosList = document.getElementById('todosList');
+  const todos = getTodos();
+
+  if (todos.length === 0) {
+    todosList.innerHTML = `
+      <div class="empty-state">
+        <div><span>🍡</span></div>
+        <p>No tasks yet. Add one to get started!</p>
+      </div>
+    `;
+    updateStats();
+    return;
+  }
+
+  todosList.innerHTML = todos.map(todo => `
+    <div class="todo-item ${todo.completed ? 'completed' : ''}">
+      <input 
+        type="checkbox" 
+        class="checkbox" 
+        ${todo.completed ? 'checked' : ''}
+        onchange="toggleTodo(${todo.id})"
+      >
+      <span class="todo-text">${escapeHtml(todo.text)}</span>
+      <button class="btn-delete" onclick="deleteTodo(${todo.id})">Delete</button>
+    </div>
+  `).join('');
+
+  updateStats();
+}
+
+// Update statistics
+function updateStats() {
+  const todos = getTodos();
+  const completed = todos.filter(t => t.completed).length;
+  const pending = todos.length - completed;
+
+  document.getElementById('totalCount').textContent = todos.length;
+  document.getElementById('completedCount').textContent = completed;
+  document.getElementById('pendingCount').textContent = pending;
+}
+
+// Get todos from localStorage
+function getTodos() {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  return stored ? JSON.parse(stored) : [];
+}
+
+// Save todos to localStorage
+function saveTodos(todos) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(todos));
+}
+
+// Load todos on startup
+function loadTodos() {
+  renderTodos();
+}
+
+// Escape HTML to prevent XSS
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+</script>
+
+</body>
+</html>
